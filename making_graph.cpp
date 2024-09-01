@@ -6,15 +6,22 @@
 
 using namespace std;
 
+// int* unsorted_array_generator(int num_integers,int random_seed){
+//     mt19937 gen(random_seed);
+//     int lower_bound = 0;
+//     int upper_bound = 15000;
+//     uniform_int_distribution<> dis(lower_bound, upper_bound); 
+//     int* arr_pointer=new int[num_integers];
+//     for(int i=0;i<num_integers;i++){
+//         arr_pointer[i]=dis(gen);
+//     }
+//     return arr_pointer;
+// }
+
 int* unsorted_array_generator(int num_integers,int random_seed){
-    mt19937 gen(random_seed);
-    int lower_bound = 0;
-    int upper_bound = 15000;
-    uniform_int_distribution<> dis(lower_bound, upper_bound); 
-    int arr[num_integers];
-    int* arr_pointer=arr;
+    int* arr_pointer=new int[num_integers];
     for(int i=0;i<num_integers;i++){
-        arr_pointer[i]=dis(gen);
+        arr_pointer[i]=i;
     }
     return arr_pointer;
 }
@@ -27,8 +34,12 @@ int Partition(int* arr,int start,int end,int pivot_index){
     int x;
     int pivot=arr[pivot_index];
     int pIndex=start;
+    //swapping
+    x = arr[pivot_index];
+    arr[pivot_index] = arr[end];
+    arr[end] = x;
     for(int i=start;i<end;i++){
-        if(arr[i]<=pivot){
+        if(arr[i]<pivot){
             //swaping
             x=arr[i];
             arr[i]=arr[pIndex];
@@ -38,8 +49,8 @@ int Partition(int* arr,int start,int end,int pivot_index){
     }
     //swaping
     x=arr[pIndex];
-    arr[pIndex]=arr[pivot_index];
-    arr[pivot_index]=x;
+    arr[pIndex]=arr[end];
+    arr[end]=x;
     return pIndex;
 }
 
@@ -53,97 +64,306 @@ void Simple_QuickSort(int* arr,int start,int end){
     Simple_QuickSort(arr,Pindex+1,end);
 }
 
-//subarray of 3
-int median_of_medians_3(int* arr,int start,int end){
-    int length=end-start+1;
-    if(length<=3){
-        Simple_QuickSort(arr,0,length-1);
-        return arr[start+(length-1)/2];
+// //subarray of 3
+// int median_of_medians_3(int* arr,int start,int end){
+//     int length=end-start+1;
+//     if(length<=3){
+//         Simple_QuickSort(arr,0,length-1);
+//         return arr[start+(length-1)/2];
+//     }
+//     int num_subarrays=ceiling_division(length,3);
+//     int* medians_array=new int[num_subarrays];
+//     for(int i=0;i<num_subarrays-1;i++){
+//         int* temp=new int[3];
+//         for(int j=0;j<3;j++){
+//             temp[j]=arr[start+i*3+j];
+//         }
+//         Simple_QuickSort(temp,0,2);
+//         medians_array[i]=temp[1];
+//     }
+//     int last_length=end-start-(num_subarrays-1)*3+1;
+//     int* temp=new int[last_length];
+//     for(int j=0;j<last_length;j++){
+//         temp[j]=arr[start+(num_subarrays-1)*3+j];
+//     }
+//     if(last_length!=0){
+//         Simple_QuickSort(temp,0,end-start-(num_subarrays-1)*3);
+//         medians_array[num_subarrays-1]=temp[(last_length-1)/2];
+//     }
+//     int median_of_medians=median_of_medians_3(medians_array,0,num_subarrays-1);
+//     return median_of_medians;
+// }
+
+int median_of_medians_3(int* arr, int start, int end) {
+    int length = end - start + 1;
+    if (length <= 3) {
+        Simple_QuickSort(arr, start, end); // Use Simple_QuickSort to sort the small array
+        return arr[start + (length - 1) / 2]; // Return the median
     }
-    int num_subarrays=ceiling_division(length,3);
-    int* medians_array=new int[num_subarrays];
-    for(int i=0;i<num_subarrays-1;i++){
-        int* temp=new int[3];
-        for(int j=0;j<3;j++){
-            temp[j]=arr[start+i*3+j];
+
+    int num_subarrays = ceiling_division(length, 3);
+    int* medians_array = new int[num_subarrays];
+
+    // Compute medians of each subarray
+    for (int i = 0; i < num_subarrays - 1; ++i) {
+        int* temp = new int[3];
+        for (int j = 0; j < 3; ++j) {
+            temp[j] = arr[start + i * 3 + j];
         }
-        Simple_QuickSort(temp,0,2);
-        medians_array[i]=temp[1];
+        Simple_QuickSort(temp, 0, 2);
+        medians_array[i] = temp[1]; // Median of 7 elements is the 4th element (index 3)
+        delete[] temp; // Free memory
     }
-    int last_length=end-start-(num_subarrays-1)*3+1;
-    int* temp=new int[last_length];
-    for(int j=0;j<last_length;j++){
-        temp[j]=arr[start+(num_subarrays-1)*3+j];
+
+    // Handle the last subarray
+    int last_length = end - start - (num_subarrays - 1) * 3 + 1;
+    int* temp = new int[last_length];
+    for (int j = 0; j < last_length; ++j) {
+        temp[j] = arr[start + (num_subarrays - 1) * 3 + j];
     }
-    if(last_length!=0){
-        Simple_QuickSort(temp,0,end-start-(num_subarrays-1)*3);
-        medians_array[num_subarrays-1]=temp[(last_length-1)/2];
+
+    if (last_length != 0) {
+        Simple_QuickSort(temp, 0, last_length - 1);
+        medians_array[num_subarrays - 1] = temp[(last_length - 1) / 2];
     }
-    int median_of_medians=median_of_medians_3(medians_array,0,num_subarrays-1);
+    delete[] temp; // Free memory
+
+    // Recursively find the median of medians
+    int median_of_medians = median_of_medians_3(medians_array, 0, num_subarrays - 1);
+    delete[] medians_array; // Free memory
+
     return median_of_medians;
 }
 
-//subarray of 5
-int median_of_medians_5(int* arr,int start,int end){
-    int length=end-start+1;
-    if(length<=5){
-        Simple_QuickSort(arr,0,length-1);
-        return arr[start+(length-1)/2];
+// //subarray of 3
+// int median_of_medians_3(int* arr,int start,int end){
+//     int length=end-start+1;
+//     if(length<=3){
+//         Simple_QuickSort(arr,0,length-1);
+//         return arr[start+(length-1)/2];
+//     }
+//     int num_subarrays=ceiling_division(length,3);
+//     int* medians_array=new int[num_subarrays];
+//     for(int i=0;i<num_subarrays-1;i++){
+//         // int* temp=new int[5];
+//         // for(int j=0;j<5;j++){
+//         //     temp[j]=arr[start+i*5+j];
+//         // }
+//         Simple_QuickSort(arr,3*i+start,3*i+start+2);
+//         medians_array[i]=arr[3*i+start+1];
+//     }
+//     int last_length=end-start-(num_subarrays-1)*3+1;
+//     // int* temp=new int[last_length];
+//     // for(int j=0;j<last_length;j++){
+//     //     temp[j]=arr[start+(num_subarrays-1)*5+j];
+//     // }
+//     if(last_length!=0){
+//         Simple_QuickSort(arr,start+(num_subarrays-1)*3,start+(num_subarrays-1)*3+last_length-1);
+//         medians_array[num_subarrays-1]=arr[start+(num_subarrays-1)*3+(last_length-1)/2];
+//     }
+//     int median_of_medians=median_of_medians_3(medians_array,0,num_subarrays-1);
+//     // cout<<median_of_medians<<endl;
+//     return median_of_medians;
+// }
+
+// //subarray of 5
+// int median_of_medians_5(int* arr,int start,int end){
+//     int length=end-start+1;
+//     if(length<=5){
+//         Simple_QuickSort(arr,0,length-1);
+//         return arr[start+(length-1)/2];
+//     }
+//     int num_subarrays=ceiling_division(length,5);
+//     int* medians_array=new int[num_subarrays];
+//     for(int i=0;i<num_subarrays-1;i++){
+//         // int* temp=new int[5];
+//         // for(int j=0;j<5;j++){
+//         //     temp[j]=arr[start+i*5+j];
+//         // }
+//         Simple_QuickSort(arr,5*i+start,5*i+start+4);
+//         medians_array[i]=arr[5*i+start+2];
+//     }
+//     int last_length=end-start-(num_subarrays-1)*5+1;
+//     // int* temp=new int[last_length];
+//     // for(int j=0;j<last_length;j++){
+//     //     temp[j]=arr[start+(num_subarrays-1)*5+j];
+//     // }
+//     if(last_length!=0){
+//         Simple_QuickSort(arr,start+(num_subarrays-1)*5,start+(num_subarrays-1)*5+last_length-1);
+//         medians_array[num_subarrays-1]=arr[start+(num_subarrays-1)*5+(last_length-1)/2];
+//     }
+//     int median_of_medians=median_of_medians_5(medians_array,0,num_subarrays-1);
+//     // cout<<median_of_medians<<endl;
+//     return median_of_medians;
+// }
+// //subaray of 5
+// int median_of_medians_5(int* arr,int start,int end){
+//     int length=end-start+1;
+//     if(length<=5){
+//         Simple_QuickSort(arr,0,length-1);
+//         return arr[start+(length-1)/2];
+//     }
+//     int num_subarrays=ceiling_division(length,5);
+//     int* medians_array=new int[num_subarrays];
+//     for(int i=0;i<num_subarrays-1;i++){
+//         int* temp=new int[5];
+//         for(int j=0;j<5;j++){
+//             temp[j]=arr[start+i*5+j];
+//         }
+//         Simple_QuickSort(temp,0,4);
+//         medians_array[i]=temp[2];
+//     }
+//     int last_length=end-start-(num_subarrays-1)*5+1;
+//     int* temp=new int[last_length];
+//     for(int j=0;j<last_length;j++){
+//         temp[j]=arr[start+(num_subarrays-1)*5+j];
+//     }
+//     if(last_length!=0){
+//         Simple_QuickSort(temp,0,end-start-(num_subarrays-1)*5);
+//         medians_array[num_subarrays-1]=temp[(last_length-1)/2];
+//     }
+//     int median_of_medians=median_of_medians_5(medians_array,0,num_subarrays-1);
+//     return median_of_medians;
+// }
+int median_of_medians_5(int* arr, int start, int end) {
+    int length = end - start + 1;
+    if (length <= 5) {
+        Simple_QuickSort(arr, start, end);
+        return arr[start + (length - 1) / 2];
     }
-    int num_subarrays=ceiling_division(length,5);
-    int* medians_array=new int[num_subarrays];
-    for(int i=0;i<num_subarrays-1;i++){
-        int* temp=new int[5];
-        for(int j=0;j<5;j++){
-            temp[j]=arr[start+i*5+j];
+
+    int num_subarrays = ceiling_division(length, 5);
+    int* medians_array = new int[num_subarrays];
+
+    // Compute medians of each subarray
+    for (int i = 0; i < num_subarrays - 1; ++i) {
+        int* temp = new int[5];
+        for (int j = 0; j < 5; ++j) {
+            temp[j] = arr[start + i * 5 + j];
         }
-        Simple_QuickSort(temp,0,4);
-        medians_array[i]=temp[2];
+        Simple_QuickSort(temp, 0, 4);
+        medians_array[i] = temp[2];
+        delete[] temp; // Free memory
     }
-    int last_length=end-start-(num_subarrays-1)*5+1;
-    int* temp=new int[last_length];
-    for(int j=0;j<last_length;j++){
-        temp[j]=arr[start+(num_subarrays-1)*5+j];
+
+    // Handle the last subarray
+    int last_length = end - start - (num_subarrays - 1) * 5 + 1;
+    int* temp = new int[last_length];
+    for (int j = 0; j < last_length; ++j) {
+        temp[j] = arr[start + (num_subarrays - 1) * 5 + j];
     }
-    if(last_length!=0){
-        Simple_QuickSort(temp,0,end-start-(num_subarrays-1)*5);
-        medians_array[num_subarrays-1]=temp[(last_length-1)/2];
+
+    if (last_length != 0) {
+        Simple_QuickSort(temp, 0, last_length - 1);
+        medians_array[num_subarrays - 1] = temp[(last_length - 1) / 2];
     }
-    int median_of_medians=median_of_medians_5(medians_array,0,num_subarrays-1);
-    cout<<median_of_medians<<endl;
+    delete[] temp; // Free memory
+
+    // Recursively find the median of medians
+    int median_of_medians = median_of_medians_5(medians_array, 0, num_subarrays - 1);
+    delete[] medians_array; // Free memory
+
     return median_of_medians;
 }
-
 // subarray of 7
-int median_of_medians_7(int* arr,int start,int end){
-    int length=end-start+1;
-    if(length<=7){
-        Simple_QuickSort(arr,0,length-1);
-        return arr[start+(length-1)/2];
+// int median_of_medians_7(int* arr,int start,int end){
+//     int length=end-start+1;
+//     if(length<=7){
+//         Simple_QuickSort(arr,0,length-1);
+//         return arr[start+(length-1)/2];
+//     }
+//     int num_subarrays=ceiling_division(length,7);
+//     int* medians_array=new int[num_subarrays];
+//     for(int i=0;i<num_subarrays-1;i++){
+//         // int* temp=new int[5];
+//         // for(int j=0;j<5;j++){
+//         //     temp[j]=arr[start+i*5+j];
+//         // }
+//         Simple_QuickSort(arr,7*i+start,7*i+start+6);
+//         medians_array[i]=arr[7*i+start+3];
+//     }
+//     int last_length=end-start-(num_subarrays-1)*7+1;
+//     // int* temp=new int[last_length];
+//     // for(int j=0;j<last_length;j++){
+//     //     temp[j]=arr[start+(num_subarrays-1)*5+j];
+//     // }
+//     if(last_length!=0){
+//         Simple_QuickSort(arr,start+(num_subarrays-1)*7,start+(num_subarrays-1)*7+last_length-1);
+//         medians_array[num_subarrays-1]=arr[start+(num_subarrays-1)*7+(last_length-1)/2];
+//     }
+//     int median_of_medians=median_of_medians_7(medians_array,0,num_subarrays-1);
+//     // cout<<median_of_medians<<endl;
+//     return median_of_medians;
+// }
+// //subarray of 7 
+// int median_of_medians_7(int* arr,int start,int end){
+//     int length=end-start+1;
+//     if(length<=7){
+//         Simple_QuickSort(arr,0,length-1);
+//         return arr[start+(length-1)/2];
+//     }
+//     int num_subarrays=ceiling_division(length,7);
+//     int* medians_array=new int[num_subarrays];
+//     for(int i=0;i<num_subarrays-1;i++){
+//         int* temp=new int[7];
+//         for(int j=0;j<7;j++){
+//             temp[j]=arr[start+i*7+j];
+//         }
+//         Simple_QuickSort(temp,0,6);
+//         medians_array[i]=temp[3];
+//     }
+//     int last_length=end-start-(num_subarrays-1)*7+1;
+//     int* temp=new int[last_length];
+//     for(int j=0;j<last_length;j++){
+//         temp[j]=arr[start+(num_subarrays-1)*7+j];
+//     }
+//     if(last_length!=0){
+//         Simple_QuickSort(temp,0,end-start-(num_subarrays-1)*7);
+//         medians_array[num_subarrays-1]=temp[(last_length-1)/2];
+//     }
+//     int median_of_medians=median_of_medians_7(medians_array,0,num_subarrays-1);
+//     return median_of_medians;
+// }
+int median_of_medians_7(int* arr, int start, int end) {
+    int length = end - start + 1;
+    if (length <= 7) {
+        Simple_QuickSort(arr, start, end); // Use Simple_QuickSort to sort the small array
+        return arr[start + (length - 1) / 2]; // Return the median
     }
-    int num_subarrays=ceiling_division(length,7);
-    int* medians_array=new int[num_subarrays];
-    for(int i=0;i<num_subarrays-1;i++){
-        int* temp=new int[7];
-        for(int j=0;j<7;j++){
-            temp[j]=arr[start+i*7+j];
+
+    int num_subarrays = ceiling_division(length, 7);
+    int* medians_array = new int[num_subarrays];
+
+    // Compute medians of each subarray
+    for (int i = 0; i < num_subarrays - 1; ++i) {
+        int* temp = new int[7];
+        for (int j = 0; j < 7; ++j) {
+            temp[j] = arr[start + i * 7 + j];
         }
-        Simple_QuickSort(temp,0,6);
-        medians_array[i]=temp[3];
+        Simple_QuickSort(temp, 0, 6);
+        medians_array[i] = temp[3]; // Median of 7 elements is the 4th element (index 3)
+        delete[] temp; // Free memory
     }
-    int last_length=end-start-(num_subarrays-1)*7+1;
-    int* temp=new int[last_length];
-    for(int j=0;j<last_length;j++){
-        temp[j]=arr[start+(num_subarrays-1)*7+j];
+
+    // Handle the last subarray
+    int last_length = end - start - (num_subarrays - 1) * 7 + 1;
+    int* temp = new int[last_length];
+    for (int j = 0; j < last_length; ++j) {
+        temp[j] = arr[start + (num_subarrays - 1) * 7 + j];
     }
-    if(last_length!=0){
-        Simple_QuickSort(temp,0,end-start-(num_subarrays-1)*7);
-        medians_array[num_subarrays-1]=temp[(last_length-1)/2];
+
+    if (last_length != 0) {
+        Simple_QuickSort(temp, 0, last_length - 1);
+        medians_array[num_subarrays - 1] = temp[(last_length - 1) / 2];
     }
-    int median_of_medians=median_of_medians_7(medians_array,0,num_subarrays-1);
+    delete[] temp; // Free memory
+
+    // Recursively find the median of medians
+    int median_of_medians = median_of_medians_7(medians_array, 0, num_subarrays - 1);
+    delete[] medians_array; // Free memory
+
     return median_of_medians;
 }
-
 int find_pivot_index(int* arr,int start,int end,int mom){
     //linear search
     for(int i=start;i<=end;i++){
@@ -151,6 +371,7 @@ int find_pivot_index(int* arr,int start,int end,int mom){
             return i;
         }
     }
+    cout<<"wtf??"<<endl;
     return -1; //failed
 }
 
@@ -160,6 +381,7 @@ void QuickSort_3(int* arr,int start,int end){
         return;
     }
     int mom=median_of_medians_3(arr,start,end);
+    // cout<<mom<<endl;
     int pivot_index=find_pivot_index(arr,start,end,mom);
     int Pindex=Partition(arr,start,end,pivot_index);
     QuickSort_3(arr,start,Pindex-1);
@@ -319,6 +541,12 @@ int main() {
         end=clock();
         duration = double(end - start) / CLOCKS_PER_SEC;
         simple_quick_sort_time.push_back(duration);
+        for(int j=0;j<i-1;j++){
+            if(unsorted_arr[j]>unsorted_arr[j+1]){
+                cout<<"wtf"<<endl;
+                return 0;
+            }
+        }
         // start=clock();
         // answer_arr=InsertionSort(unsorted_arr,i);
         // end=clock();
@@ -348,12 +576,26 @@ int main() {
     for(int i=2;i<=x+5;i++){
         cout<<i<<endl;
         unsorted_arr=unsorted_array_generator(i,42);
+        // for(int j=0;j<i;j++){
+        //     cout<<unsorted_arr[j]<<" ";
+        // }
+        // cout<<endl;
         //unsorted
         start=clock();
         QuickSort_3(unsorted_arr,0,i-1);
         end=clock();
         duration = double(end - start) / CLOCKS_PER_SEC;
         quick_sort_time_3.push_back(duration);
+        // for(int j=0;j<i;j++){
+        //     cout<<unsorted_arr[j]<<" ";
+        // }
+        // cout<<endl;
+        for(int j=0;j<i-1;j++){
+            if(unsorted_arr[j]>unsorted_arr[j+1]){
+                cout<<"wtf"<<endl;
+                return 0;
+            }
+        }
     }
     cout<<"insertion sort time:"<<quick_sort_time_3[x]<<endl;
     plotSingleVector_quicksort_3(quick_sort_time_3);
@@ -382,6 +624,12 @@ int main() {
         end=clock();
         duration = double(end - start) / CLOCKS_PER_SEC;
         quick_sort_time_5.push_back(duration);
+        for(int j=0;j<i-1;j++){
+            if(unsorted_arr[j]>unsorted_arr[j+1]){
+                cout<<"wtf"<<endl;
+                return 0;
+            }
+        }
     }
     cout<<"merge sort time:"<<quick_sort_time_5[u]<<endl;
     plotSingleVector_quicksort_5(quick_sort_time_5);
@@ -389,12 +637,21 @@ int main() {
     for(int i=2;i<=u+5;i++){
         cout<<i<<endl;
         unsorted_arr=unsorted_array_generator(i,42);
+        // if(i==7){
+        //     cout<<unsorted_arr[0]<<" "<<unsorted_arr[1]<<endl;
+        // }
         //unsorted
         start=clock();
         QuickSort_7(unsorted_arr,0,i-1);
         end=clock();
         duration = double(end - start) / CLOCKS_PER_SEC;
         quick_sort_time_7.push_back(duration);
+        for(int j=0;j<i-1;j++){
+            if(unsorted_arr[j]>unsorted_arr[j+1]){
+                cout<<"wtf"<<endl;
+                return 0;
+            }
+        }
     }
     cout<<"quick sort time:"<<quick_sort_time_7[u]<<endl;
     plotSingleVector_quicksort_7(quick_sort_time_7);
